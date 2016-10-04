@@ -781,7 +781,7 @@ module.exports = function(grunt) {
         ],
         options: {
           outDir: devBuildPath + '/lib/integration-tests/tcp/jasmine_chromeapp/',
-          keepRunner: false
+          keepRunner: true
         }
       },
       socksEcho: {
@@ -936,12 +936,7 @@ module.exports = function(grunt) {
     'copy:resources', 
     'copy:devGenericCore', 
     'compileTypescript', 
-    'browserify:genericCoreFreedomModule', 
     'browserify:loggingProvider', 
-    'browserify:churnPipeFreedomModule', 
-    'browserify:cloudInstallerFreedomModule', 
-    'browserify:cloudSocialProviderFreedomModule', 
-    'browserify:digitalOceanFreedomModule'
   ]);
   registerTask(grunt, 'echoServer', [
     'base', 

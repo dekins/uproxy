@@ -72,48 +72,87 @@ parentModule.on('shutdown', () => {
   });
 });
 
-// Starts a server on a free port and makes a connection to that
-// port before closing that connection, verifying that each side
-// of the socket receives the appropriate SocketCloseKind event.
-parentModule.on('onceclosedbyserver', () => {
-  var server = getServerOnFreePort();
-
-  server.listen().then((endpoint:net.Endpoint) => {
-    var client = new tcp.Connection({endpoint: endpoint});
+// Verifies that servers receive the correct SocketCloseKind
+// when the server terminates connections.
+parentModule.on('onceclosedbyserverserverside', () => {
+  const server = getServerOnFreePort();
+  server.listen().then((endpoint) => {
+    new tcp.Connection({
+      endpoint: endpoint
+    });
     server.connectionsQueue.setSyncHandler((connection:tcp.Connection) => {
-      client.onceConnected.then(() => {
-        connection.close();
-        return Promise.all<any>([connection.onceClosed, client.onceClosed]);
-      })
-      .then((values:any) => {
-        if (values[0] === tcp.SocketCloseKind.WE_CLOSED_IT &&
-            values[1] === tcp.SocketCloseKind.REMOTELY_CLOSED) {
-          parentModule.emit('onceclosedbyserver');
+      connection.close();
+      connection.onceClosed.then((kind) => {
+        if (kind === tcp.SocketCloseKind.WE_CLOSED_IT) {
+          parentModule.emit('onceclosedbyserverserverside');
+        } else {
+          console.error('onceclosedbyserverserverside: wrong close type ' + tcp.SocketCloseKind[kind]);
         }
       });
     });
   });
 });
 
-// Starts a server on a free port and makes a connection to that
-// port before closing that connection, verifying that each side
-// of the socket receives the appropriate SocketCloseKind event.
-parentModule.on('onceclosedbyclient', () => {
-  var server = getServerOnFreePort();
-
-  server.listen().then((endpoint:net.Endpoint) => {
-    var client = new tcp.Connection({endpoint: endpoint});
+// Verifies that clients receive the correct SocketCloseKind
+// when the server terminates connections.
+parentModule.on('onceclosedbyserverclientside', () => {
+  const server = getServerOnFreePort();
+  server.listen().then((endpoint) => {
+    const client = new tcp.Connection({
+      endpoint: endpoint
+    });
+    client.onceClosed.then((kind) => {
+      if (kind === tcp.SocketCloseKind.REMOTELY_CLOSED) {
+        parentModule.emit('onceclosedbyserverclientside');
+      } else {
+        console.error('onceclosedbyserverclientside: wrong close type ' + tcp.SocketCloseKind[kind]);
+      }
+    });
     server.connectionsQueue.setSyncHandler((connection:tcp.Connection) => {
-      client.onceConnected.then(() => {
-        client.close();
-        return Promise.all<any>([connection.onceClosed, client.onceClosed]);
-      })
-      .then((values:any) => {
-        if (values[0] === tcp.SocketCloseKind.REMOTELY_CLOSED &&
-            values[1] === tcp.SocketCloseKind.WE_CLOSED_IT) {
-          parentModule.emit('onceclosedbyclient');
+      connection.close();
+    });
+  });
+});
+
+// Verifies that servers receive the correct SocketCloseKind
+// when clients terminate connections.
+parentModule.on('onceclosedbyclientserverside', () => {
+  const server = getServerOnFreePort();
+  server.listen().then((endpoint:net.Endpoint) => {
+    const client = new tcp.Connection({
+      endpoint: endpoint
+    });
+    client.onceConnected.then(() => {
+      client.close();
+    })
+    server.connectionsQueue.setSyncHandler((connection:tcp.Connection) => {
+      connection.onceClosed.then((kind) => {
+        if (kind === tcp.SocketCloseKind.REMOTELY_CLOSED) {
+          parentModule.emit('onceclosedbyclientserverside');
+        } else {
+          console.error('onceclosedbyclientserverside: wrong close type ' + tcp.SocketCloseKind[kind]);
         }
       });
+    });
+  });
+});
+
+// Verifies that clients receive the correct SocketCloseKind
+// when clients terminate connections.
+parentModule.on('onceclosedbyclientclientside', () => {
+  getServerOnFreePort().listen().then((endpoint) => {
+    const client = new tcp.Connection({
+      endpoint: endpoint
+    });
+    client.onceConnected.then(() => {
+      client.close();
+    })
+    client.onceClosed.then((kind) => {
+      if (kind === tcp.SocketCloseKind.WE_CLOSED_IT) {
+        parentModule.emit('onceclosedbyclientclientside');
+      } else {
+        console.error('onceclosedbyclientclientside: wrong close type ' + tcp.SocketCloseKind[kind]);
+      }
     });
   });
 });

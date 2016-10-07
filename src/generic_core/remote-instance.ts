@@ -108,7 +108,7 @@ import ui = ui_connector.connector;
         // The User which this instance belongs to.
         public user :remote_user.User,
         public instanceId :string) {
-      this.connection_ = remote_connection.getRemoteConnection(
+      this.connection_ = remote_connection.getOrCreateRemoteConnection(
           this.handleConnectionUpdate_, this.instanceId, this.user.userId,
           globals.portControl);
 

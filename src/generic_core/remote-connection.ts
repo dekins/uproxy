@@ -496,7 +496,7 @@ var generateProxyingSessionId_ = (): string => {
     }
   }
 
-export function getRemoteConnection (
+export function getOrCreateRemoteConnection (
     sendUpdate :(x:uproxy_core_api.Update, data?:Object) => void,
     instanceId:string,
     userId?:string,

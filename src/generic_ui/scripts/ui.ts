@@ -302,6 +302,7 @@ export class UserInterface implements ui_constants.UiApi {
   }
 
   public restartServer_ = (providerName :string) => {
+    console.warn('Restarting server on ' + providerName);
     this.getConfirmation(
       this.i18n_t('RESTART_SERVER_TITLE'),
       this.i18n_t('RESTART_SERVER_TEXT'),
